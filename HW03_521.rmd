@@ -1,0 +1,499 @@
+---
+title: "Homework Week 3"
+author: "Shivani Agarwal"
+date: "4/15/2020"
+output:
+  html_document:
+    df_print: paged
+class: ISQA 521 – Spring 2020
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+```{r}
+library(lessR)
+library(ggplot2)
+library(reshape2)
+library(tidyr)
+```
+
+## 1.	Relate Categorical and Continuous Variables
+
+### a. Source and DriveTrain are integer scored categorical variables. From the help file for Cars93:
+Source: 0=non-USA manufacturer, 1=USA manufacturer
+DriveTrain: 0 = rear wheel drive, 1 = front wheel drive, 2 = all wheel drive
+
+Convert both integer scored variables to R factors.
+
+```{r}
+
+data(dataCars93)
+dataCars93 -> d
+
+d$Source = factor(d$Source, levels=0:1, labels=c("non-USA manufacturer", "USA manufacturer"))
+
+d$DriveTrain = factor(d$DriveTrain, levels=0:2, labels=c("rear wheel drive", "front wheel drive","all wheel drive"))
+
+str(d)
+
+```
+
+
+
+### b. Provide the i) lessR and ii) ggplot2 scatter plots of the source of the car versus city MPG, with the means for each source overlaid over the scatter plot. 
+
+#### i) lessR
+
+```{r}
+#data(dataCars93)
+#dataCars93 -> d
+Plot(Source,MPGcity , stat="mean")
+```
+
+#### ii) ggplot2
+
+```{r}
+ms <- pivot(d, mean, Source, MPGcity)
+
+```
+
+
+```{r }
+ggplot(d, aes( Source,MPGcity)) +
+   geom_point() +
+   geom_point(data=ms, aes(Source,MPGcity), color="light blue", size=3)
+```
+
+
+### c. Do the t-test for the mean difference, which also yields the simultaneous plot of both density curves of city MPG for the two sources.
+
+
+```{r}
+tt_brief(MPGcity ~ Source)
+```
+
+
+
+#### Is the difference in city MPG statistically significant? Looking at the distributions, how do you explain this difference? 
+Ans: It seems that Non-Usa manufacturers has some clear outliers which brought the stanadrd mean difference of 0.533 between non- usa and usa manufacturers. If we will remove these ouliers then it seems that there will not be any potential difference between the mpgCity of both manufacturers.
+
+### d. Provide the lessR and ggplot2 bubble plot for the frequencies of the source of the car with the type of drive train. 
+
+#### i) lessR
+
+```{r}
+Plot(Source, DriveTrain)
+```
+
+
+#### ii) ggplot2
+
+```{r }
+ggplot(d, aes(Source, DriveTrain)) +
+  geom_count() + scale_size_area(max_size=14)
+```
+
+
+
+
+#### How does the distribution of source of manufacture compare to the type of drive train?
+Ans: It seems from the distribution that most preferred cars are front wheel cars for both USA and Non-usa manufacturers and Least preferred are the all wheel drive for both of the types of source. Overall, distribution is almost same for both types of source for drivetrain.
+
+### e. Provide the Trellis boxplot of MPGcity across the three levels of DriveTrain.
+
+```{r }
+BoxPlot(MPGcity, by1=DriveTrain)
+```
+
+
+### f. Provide the full Trellis VBS (violin/box/scatterplot)  of MPGcity across the three levels of DriveTrain.
+
+```{r }
+Plot(MPGcity, by1=DriveTrain)
+```
+
+
+##### At least in these samples, how is DriveTrain related to city MPG? (Could do an ANOVA to run the formal test of mean differences, such as with lessR ANOVA(), but will not do that here.)
+Ans: It seems that front wheel drive has three outliers which made for skewed plot in comparision to others. On the other hand, All wheel drive has just one outlier and thats also not so beyond, making it the  most preferred for mileage of more than 40 and the least preferred is rear drive for the mileage of just a little over the 30. However, in the plot it seems front wheel drive has the highest mileage of around 50 MPG.
+
+
+## 2. Plot Time Oriented Data
+
+Run Chart
+An example is an assembly line process that fills cereal boxes. To calibrate the machine that releases the cereal into the box, record the weight in grams for 50 consecutive cereal boxes. The target value, the stated filled weight in grams on the cereal box, is 350 grams.
+The run chart provides insight into the dynamics of an ongoing process. Because of the random variation inherent in every process outcome, the run chart displays these random fluctuations, including those data values that represent a stable process. The visualization of the output of a stable process centers on a horizontal line with random variations about that center line with a constant level of variation. One purpose of the run chart is to evaluate the stability of the process. 
+The data:  http://lessRstats.com/data/Cereal.xlsx
+
+```{r}
+d <- Read("http://lessRstats.com/data/Cereal.xlsx")
+d
+```
+
+
+### a. Construct the run chart of the variable Weight.
+
+```{r}
+Plot(Weight, run=TRUE)
+
+```
+
+
+### b. Does the production process appear stable (constant mean and variability)?
+Ans: I see here that there is not much variability in the process of releasing the cereals into the box. Infact, the median could represent as center for most of them which is very close to 350 gms and also the variability is between 354 to 346 round which is not much as the target is 350 gm.
+
+## Time Series
+The following data set updates deaths and other statistic due to COVID-19 on a daily basis. So the exact form of the plots will depend on the day in which you analyze the data.
+The data:  https://opendata.ecdc.europa.eu/covid19/casedistribution/csv
+
+```{r}
+d <- Read("https://opendata.ecdc.europa.eu/covid19/casedistribution/csv")
+d
+```
+
+
+### a. As always, examine the data. 
+
+#### i)  How many rows of data in the full data set?
+Ans: 11,152 rows of data is there in the full data set.
+
+#### ii) Look at the first ten rows. From the output of Read(), we will only focus on a subset of variables. Read() also provides the column indices to identify the variables.
+ggplot2 wants only data in long format. Is the data in wide format or long format? Do we need to transform the data? Just examine the variables in columns 1, 5, 6, and 8 through 10
+
+```{r}
+str(d)
+```
+
+Ans: There seems to be no variables having long format therefore we need to transform the data into long format here. 
+
+```{r}
+myd <- gather(d, key=Day, value= deaths, -day, -month, -year, -countriesAndTerritories)
+myd
+```
+
+
+### b. Subset the data table to include only data for USA, Italy, and Spain. The corresponding two-character country codes, the variable geoId, are US, IT and ES. Just retain the variables in columns 1, 5, 6, and 8 through 10.
+
+```{r}
+d10= d[.(geoId==c("US","IT","ES")), .(dateRep, cases, deaths, geoId, countryterritoryCode, popData2018)]
+d10
+```
+
+
+### c. After the extraction (sub-setting), examine the first ten rows, and the total number of rows. Ready to proceed?
+
+```{r}
+d10 <- d10[1:10,]
+d10
+```
+
+
+### d. Convert the character string date to an R variable type Date.
+
+```{r}
+d$dateRep <- as.Date(d$dateRep, format="%m/%d/%Y")
+d
+```
+
+
+### e. Invoke the base R range() function on d$dateRep to verify the range of dates. What are the beginning and ending dates? 
+The beginning date is January 1, 2020. The ending data is when the data are downloaded.
+
+```{r}
+range(d$dateRep, na.rm = FALSE)
+```
+
+
+### f. Plot the time series of deaths just for the USA for i) lessR and ii) ggplot2. First form a separate data frame, sub-setting again, but leave d alone as we will use that also.
+Interpret the time series.
+
+#### i) lessR
+
+```{r}
+d10= d[d$countryterritoryCode=="USA", c("deaths", "countryterritoryCode")]
+Plot(deaths)
+```
+
+#### ii) ggplot2
+
+```{r}
+ggplot(d10, aes(deaths,countryterritoryCode)) + geom_line()
+```
+
+
+
+### g. Get a Trellis plot for the time series of death for USA, Italy, and Spain for i) lessR and ii) ggplot2. Interpret and compare deaths across the three countries.
+
+#### i) lessR
+
+```{r}
+d10= d[.(geoId==c("US","IT","ES")), .(deaths, geoId)]
+Plot(deaths, by1=geoId, data=d10, n.col=1, fill="on")
+```
+
+#### ii) ggplot2
+
+```{r }
+ggplot(d10, aes(deaths, geoId)) +
+  geom_area() +
+  facet_grid(rows=vars(geoId)) +
+  ggtitle("Series of Deaths")
+```
+
+
+
+### h. Add some customization to the lessR Trellis time series plot. Add a black background and choose border and fill colors of your own, different from the examples. To help choose the colors, use base R colors() for all the named colors, or, examine them with lessR showColors() .
+
+
+```{r}
+Plot(deaths, by1=geoId, data=d10, n.col=4, 
+     fill="white", color="light blue", 
+     main="Series of Deaths")
+```
+
+
+## 3. Map Generation
+
+Create visualizations, including maps, that display the intensity of COVID-19 in the USA. As with most projects, most of the effort is in data preparation. 
+Technical note: We do some subsetting of a data frame in this assignment, that is, dropping rows and/or columns. The means to do this is the base R function Extract, called by 
+d[rows, cols]
+along with the lessR dot function .() for a data frame named d, and where rows and cols are expressions that indicate the rows and columns to extract.  Learn more at 
+http://web.pdx.edu/~gerbing/521/resources/Extract.html
+I lead you through the steps here and provide the code for some manipulations that are not part of this class per se.
+
+
+### a. Read the COVID-19 data into the d data frame.
+The data are some COVID-19 statistics for each state in the USA. Could not locate a downloadable source, even at cdc.gov, so scraped a web site with the data displayed, pasted into Excel, and uploaded to the web as an Excel file, covid19.xlsx. Go to the source to get more of a description of the variable names, which are abbreviated in the uploaded data. 
+Data:  http://web.pdx.edu/~gerbing/521/data/covid19.xlsx
+Source: https://www.worldometers.info/coronavirus/country/us/  
+Date:  Apr 14, 2020
+Statistics
+
+```{r}
+d <- Read ("http://web.pdx.edu/~gerbing/521/data/covid19.xlsx")
+d
+```
+
+### b. Display a sorted bar chart of Cases by State. Label the numeric (y) axis.
+
+```{r}
+bc(Cases, by=State, sort = "+" , ylab = "Numeric")
+```
+
+
+### c. Display a sorted bar chart of deaths per 1 million by State. Label the numeric ($y$) axis.
+
+```{r}
+bc(Deaths1M, by=State, sort = "+" , ylab = "Numeric($y$)")
+```
+
+
+### d. Are deaths proportional to the number of cases in each state? To answer, plot cases against deaths per million. Create a lessR enhanced scatterplot. Also, label the outliers by the name of their corresponding state by adding ID="State" as a parameter and value to the function call.
+
+Ans: No, deaths are not proportional to the number of cases in each state.
+
+```{r}
+Plot(Cases, Deaths1M , ID = "State",enhance = TRUE)
+
+```
+
+
+### e. Save the d data frame into the dc data frame for later use with a simple assignment statement. 
+
+```{r}
+dc <- d
+```
+
+
+## Data Preparation
+
+The maps will show the number of COVID-19 cases per 1 million population. A bubble is displayed for each state. The area of the bubble directly reflects the intensity of COVID-19.
+
+### f. Download the worldcities Excel file to your own computer, then read into R, into the d data frame. The corresponding content 04b.Rmd file shows how to download to your own computer.
+
+```{r}
+d <- Read("/Users/shivani/Documents/Data visualization/HW3/simplemaps_worldcities_basicv1.6/worldcities.xlsx")
+d
+```
+
+
+### g. Not necessary, but convenient. The worldcities data lists the state as admin_name. Change the variable name to state. One way to do this is directly in your downloaded Excel data file. The other is with R after reading the data. Your choice. The R directions are listed here.The vector names(d) lists the names of the d data frame. We want to change one of them. We need the number of the column that is labeled admin_name. To get that column number, use the base R which() function. Then refer to that specific column number in the names vector and assign a new name.
+which(names(d) == "admin_name")
+names(d)[which(names(d) == "admin_name")] <- "state"
+
+```{r}
+names(d) == "admin_name"
+names(d)[(names(d) == "admin_name")] <- "state"
+d
+```
+
+
+### h. Now reduce the size of d by just extracting the rows of data that list cities in the USA. Do not need all the variables, so just retain the columns: city, lat, lng, iso3, state, population. Then list the first 10 rows just to check what you have left.
+
+```{r}
+d10= d[.(iso3=="USA"), .(city, lat, lng, iso3,state,population)]
+d10
+```
+
+
+### i. Maybe the best way to display on a map is to center the bubble that represents density of COVID-19 in that state. Certainly possible, but here pursue a simpler method. Display the bubble over the city in each state with the largest population. Probably best to do this at the county level, but here we have a rougher approximation at the state level. First task then, is to further reduce the d data frame to just one city per state, the city with the largest population. How to do that?Apply the lessR pivot() function with the base R max() function specified, applied to population by state. Output to the a data frame. Then check the first five rows of data to see what you computed. Can always do ?pivot to see the manual for the function.
+
+```{r}
+a <- pivot(d ,max, population,by = state)
+a
+```
+
+
+
+
+
+### j. The a data frame does not have the latitude and longitude information that we need to plot. So, we need to merge it with the d frame, doing what is called an inner-join. That is, only retain rows of data in the merged data frame that exist in both data frames to be merged. This will eliminate all the rows of data for cities that are not the maximum population size for the respective state.This kind of operation is not the subject of this course (I will be teaching a data manipulation class next year). Here is the code to make this happen, including viewing pieces of the input and output data frames.
+d[1:10,]
+a[1:10,]
+dm <- merge(a, d, by="population")
+dm[1:5,]
+
+```{r}
+d[1:10,]
+a[1:10,]
+dm <- merge(a, d, by="population")
+dm[1:5,]
+```
+
+
+
+
+### k. A little more cleaning up. The variable state was common to both input data frames, and merge() retained both variables, but called them state.x and state.y. Get rid of one of them and rename the other. The variable n is how many cities are in each state from the data file, also not needed. Again, these manipulations are not part of this course, so here is the code.
+With the lessR .() function, a minus sign, -, in front of the column specification excludes the specified variables in the extraction. Here is the code.
+dm <- dm[, -.(n, state.y)]
+names(dm)[which(names(dm) == "state.x")] <- "state"
+dm <- dm[, .(state, city, lat, lng, iso3, population)]
+dm[1:5,]
+
+
+```{r}
+dm <- dm[, -.(n, state.y)]
+names(dm)[which(names(dm) == "state.x")] <- "state"
+dm <- dm[, .(state, city, lat, lng, iso3, population)]
+dm[1:5,]
+```
+
+
+### l. Now we are ready for the main merge, to combine COVID-19 information from the dc data frame, and state and city location from the dm data frame. First check out to see what you are going to merge by listing the first five lines of each data frame.
+
+
+```{r}
+dc[1:5,]
+dm[1:5,]
+```
+
+
+### m. Now do the merge with the base R merge() function into the data frame d. The common variable in both data frames by which to merge is named differently in the two files, State and state. One approach would be to change one of the names so that both are the same. Or, just use the flexibility of merge(), referring to the common variable, but with different names. Basically, expand the by parameter to by.x and by.y.
+Here is the code for you to do this.
+d <- merge(dc, dm, by.x="State", by.y="state")
+d[1:5,]
+
+```{r}
+d <- merge(dc, dm, by.x="State", by.y="state")
+d[1:5,]
+```
+
+
+
+### n. Now we are ready to construct the map. First load the packages sf, ggrepel and rnaturalearth. Also turn off scientific notation.
+
+```{r}
+options(scipen=10000)
+library(sf)
+library(ggrepel)
+library(rgeos)
+library(rnaturalearth)
+library(devtools)
+library(rnaturalearthhires)
+```
+
+
+### o. Use the rnaturalearth function ne_states() to get the mapping polygon information in simple features format for the states of country: United States of America. Save the information into the data frame d_us. Take a look at the first row of data. Easier, but optional, to transpose the result with the base R t() function to display the contents vertically.
+
+```{r}
+d_us <- ne_states(country = "United States of America", returnclass="sf")
+t(d_us)
+d_us
+```
+
+
+### p. Now convert the information in the d_us data frame into a simple features version of a data frame with the sf package function st_as_sf(). Again, display the first row.
+
+```{r}
+cities <- st_as_sf(d10, coords = c("lng", "lat"), crs=st_crs(d_us), remove=FALSE)
+cities
+```
+
+
+### q. Choose some colors for the map background color, border color, circle color, label color. Many color pickers on the web, and likely at least one on your computer, to help choose colors. (Web search:  color  picker.)
+
+
+```{r}
+map_fill <- "#c495a2"
+map_border <- "#9c95c4"
+city_circle <- "#ada49d"
+city_label <- "#95c0c4"
+```
+
+## Maps
+
+### r. Now the maps. Generate the map of the USA with a circle over the largest city of each state that indicates the amount of COVID-19 deaths per 1 million residents. Do not add any labels here.
+
+```{r}
+ggplot() +
+  geom_sf(data=d_us, fill=map_fill, color=map_border, size=.2) +
+  geom_sf(aes(size=population), data= cities, alpha=.7, color=city_circle) +
+  scale_size_area(max_size=5) +
+  theme_set(theme_bw()) + labs(x=NULL, y=NULL) +
+  geom_text_repel(data=cities, aes(lng,lat,label=""), size=3.25, col=city_label)
+```
+
+### q. Darn! There is some little island or something way to the right of the map that makes the real content, the USA, too small. Searched the file, but could not find anything that is causing this, or cannot imagine what it represents. Some territory? Would prefer to simply remove that row or rows of data from the data file so that only the contiguous USA is plotted. Anyhow, here is a bit of a kludge to get rid of that problem. Use the sf package function coordsf() to specify limits of latitude and longitude. Here is the code to do that. Just add another line to the ggplot() call.coordsf(xlim=c(-130, -60), ylim=c(20,50)) +
+Also, with the scale_size_area() function, adjust the area of the bubbles so that they are large enough to have an impact.
+
+```{r}
+ggplot() +
+  geom_sf(data=d_us, fill=map_fill, color=map_border, size=.2) +
+  geom_sf(aes(size=population), data= cities, alpha=.7, color=city_circle) +
+  scale_size_area(max_size=10) +
+  theme_set(theme_bw()) + labs(x=NULL, y=NULL) +
+  coord_sf(xlim=c(-130, -60), ylim=c(20,50)) +
+  geom_text_repel(data=cities, aes(lng,lat, label=""), size=3.25, col=city_label)
+
+```
+
+
+
+### r. Now do the previous plot, but with each city labeled (though does not look so good).
+
+```{r}
+Plot(Cases, Deaths1M ,enhance = TRUE, ID = "city")
+```
+
+### s. Finally, focus in on the Northeast. Adjust xlim() and ylim() to focus on just the NorthEast section of the USA. Make the bubbles even larger. Unfortunately, drop the labels because they do not work with the kludge, as all labels show up, even those not in this sub-section. 
+
+
+```{r}
+ggplot() +
+  geom_sf(data=d_us, fill=map_fill, color=map_border, size=.2) +
+  geom_sf(aes(size=population), data= cities, alpha=.7, color=city_circle) +
+  scale_size_area(max_size=10) +
+  theme_set(theme_bw()) + labs(x=NULL, y=NULL) +
+  coord_sf(xlim=c(-130,-100), ylim=c(40,50)) +
+  geom_text_repel(data=cities, aes(lng,lat, label=""), size=3.25, col=city_label)
+
+```
+
+
+
+
+

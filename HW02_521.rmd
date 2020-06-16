@@ -1,0 +1,284 @@
+---
+title: "Homework Week 2"
+author: "Shivani Agarwal"
+date: "4/9/2020"
+output: html_document
+Class: ISQA 521 – Spring 2020
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lessR)
+library(ggplot2)
+```
+
+## R Markdown
+
+
+Data for analyses: http://web.pdx.edu/~gerbing/data/Cars93.csv
+```{r}
+d <- read.csv("http://web.pdx.edu/~gerbing/data/Cars93.csv")
+```
+
+## 1. Bar Chart of Two Variables: Cross-Tabulation
+
+### a.	Provide the stacked bar chart for type of car by the airbag configuration (none, driver only, driver and passenger).  
+
+#### i. base R  
+
+```{r}
+barplot(table(d$Airbags, d$Type))
+```
+
+#### ii. lessR 
+
+```{r}
+bc(Type, by=Airbags, data=d)
+```
+
+#### iii. ggplot2
+
+```{r}
+ggplot(d, aes(Type, fill=Airbags)) + geom_bar()
+```
+
+
+### b.	Provide the unstacked bar chart for type of car by the airbag configuration (none, driver only, driver and passenger).  
+
+#### i. lessR
+
+```{r}
+bc(Type, by=Airbags, data=d, beside=TRUE)
+```
+
+#### ii. ggplot2
+
+```{r}
+ggplot(d,aes(Type, fill=Airbags)) + geom_bar(position="dodge")
+```
+
+#### Briefly interpret the relationship between type of car and airbag.
+Ans: Its very apparent that the small cars are having the maximum numbers in not having Airbags installed in them which is 17%. This is true as well, as most of the small cars are budget cars and therefore have limited resources to spend on safety measures.However, sporty cars have the least percentage of 3% in this category. This is because sporty cars have high speed and required to meet most safety measures. For  Driver Pass, Van does not have this category only while Midsize suv made to the top in here with 8 % of midsize cars having it. Also, Midsize cars also have highest percentage of airbags installed for drivers as well and the least remained for van.
+Overall, it could be concluded that midsize cars are safest and vans and small cars are the most unsafe vehicle type.
+
+### c.	Provide the proportional (100%) stacked bar graph for type of car and airbag configuration. 
+
+#### i. lessR
+
+```{r }
+bc(Type, by=Airbags, stack100=TRUE)
+```
+
+#### ii. ggplot2
+
+
+```{r }
+ggplot(d, aes(Type, fill=Airbags)) + geom_bar(position="fill")
+```
+
+#### Briefly interpret the 100% bar graph.
+Ans: Here we can interpret that Small cars and van are the most unsafe in all the cars categories while Large and Midsize remains the safest among all. Infact, large cars doesnt even have none category which makes them the safest among all.
+
+
+### d.	Provide the bar graph that plots the total MPG in the city for each type of car.
+
+```{r}
+BarChart(Type, by=MPGcity, data=d)
+```
+
+
+## 2. Univariate Continuous
+
+### a. Provide the histogram using default bins for the city MPG. 
+
+#### i. lessR
+    
+```{r}
+Histogram(MPGcity, data=d)
+```
+    
+#### ii. ggplot2
+    
+    
+```{r}
+ggplot(d, aes(MPGcity)) +
+  geom_histogram(fill="lightblue", color="black")
+```
+    
+    
+### b. Provide the histogram with a more appropriate bin width for the city MPG.
+
+#### i. lessR
+
+```{r}
+hs(MPGcity, data=d, bin.width=2)
+```
+
+#### ii. ggplot2
+
+```{r}
+ggplot(d, aes(MPGcity)) +
+  geom_histogram(binwidth=2, fill="lightblue", color="black",
+                 alpha=.8, size=.25)
+```
+
+
+### c. Provide the ggplot2 overlapping histograms for city MPG for USA and non-USA cars. 
+
+```{r}
+ggplot(d, aes(MPGcity, fill=Source)) + geom_histogram(alpha=0.50)
+
+```
+
+
+### d. Provide the side-by-side histograms (Trellis plots) for city MPG for USA and non-USA cars. 
+
+#### i. lessR
+
+```{r }
+hs(MPGcity, by1=Source)
+```
+
+#### ii. ggplot2
+
+```{r }
+ggplot(d, aes(MPGcity)) + geom_histogram() +
+  facet_grid(cols=vars(Source))
+```
+
+
+### e. Provide the density curve for city MPG. Display the entire range of the curve.
+
+#### i. lessR
+
+```{r }
+Histogram(MPGcity, density=TRUE)
+```
+
+#### ii. ggplot2
+
+```{r}
+ggplot(d, bw=3.36, aes(MPGcity)) + geom_density(adjust=1.5,alpha=.2, fill="light pink") + xlim(0,50)
+```
+
+### f. Provide the overlapping ggplot density curves for city MPG for USA and non-USA cars. 
+
+
+```{r}
+ggplot(d, aes(MPGcity, fill=Source)) + geom_density(alpha=.3, adjust=1.5) + xlim(0,50)
+```
+
+### g. Provide the box plots for city MPG for USA and non-USA. (either lessR or ggplot2)
+
+
+```{r}
+ggplot(d, aes(x=MPGcity, y=Source)) + geom_boxplot()
+```
+
+### h. Provide the integrated Violin/Box/Scatterplot (VBS) for city MPG.
+
+```{r}
+Plot(MPGcity, data=d)
+```
+
+### i. What are some advantages and disadvantages of the VBS plot compared to the histogram? Discuss with respect to this example.
+Ans:
+
+```{r}
+Histogram(MPGcity, data=d)
+```
+
+Advantages of VBS plot over histogram are as follows:
+
+1. It shows a center line for the median while histogram doesn't show any median line.
+2. Outliers in VBS plot are clearly identifiable however in histogram we have to modify the bin width to see them.
+3. First and third quartile can be easily detected in VBS while in histogram there is no such thing.
+
+Disadvantages of VBS plot over histogram are as follows:
+
+VBS plot fails for Asymmetric distribution and also doesn't show proper frequency distribution and ranges as Histogram.
+
+
+## 3. Scatterplot
+
+### a.	Provide the scatter plot for MPG city and highway.
+
+#### i. lessR
+
+```{r}
+Plot(MPGcity, MPGhiway, data=d)
+```
+
+#### ii. ggplot2
+
+```{r}
+ggplot(d, aes(MPGcity, MPGhiway)) + geom_point()
+```
+
+### b.	Provide the Trellis scatterplots for MPG city and highway for automatic and manual transmissions.
+
+```{r}
+Plot(MPGcity, MPGhiway, by1 =Manual, data=d)
+```
+
+
+### c.	Compare the ggplot2 and lessR scatter plots with ellipses.
+
+```{r}
+ggplot(d, aes(MPGcity, MPGhiway)) + geom_point() + stat_ellipse()
+```
+
+```{r}
+Plot(MPGcity, MPGhiway, data=d, ellipse=TRUE)
+```
+
+Here, on comparison between the two plots we can conclude that Scatter plot has less outliers and highly co-related plots then the ggplot. Also, we get ectra useful information using scatterplot such as r, number of paired values  with no missing values and also the 95% confindence interval range. Overall, Scatterplot seems better than ggplot here.
+
+
+### d.	Provide the ggplot2 scatter plot for MPG city and highway with the non-linear and linear fit lines and 95% confidence interval.
+
+
+```{r}
+ggplot(d, aes(MPGcity, MPGhiway)) + geom_smooth(level=0.95)
+```
+```{r}
+ggplot(d, aes(MPGcity, MPGhiway)) +
+  geom_point() + geom_smooth(level=0.95, se=FALSE) # non linear
+```
+```{r}
+ggplot(d, aes(MPGcity, MPGhiway)) +
+  geom_point() + geom_smooth(level=0.95,method="lm", se=FALSE) # linear
+```
+
+
+### e.	Provide the lessR and ggplot2 scatter plots of the source of the car versus city MPG, with the means for each source overlaid over the scatter plot.
+
+#### i. LessR
+
+```{r }
+Plot(Source, MPGcity, by=Source)
+```
+
+#### ii. ggplot
+
+```{r }
+ggplot(d, aes(Source, MPGcity)) + geom_point(aes(color=Source))
+```
+
+
+
+### f.	Provide the lessR and ggplot2 bubble plots for the frequencies of the source of the car with the type of drive train.
+
+```{r}
+Plot(Source, DriveTrain, by1 = Type, data=d)
+```
+```{r }
+#ggplot(d, aes(Source, DriveTrain)) + geom_point(aes(size=Type))
+
+
+ggplot(d, aes(Source, DriveTrain)) + 
+  geom_count() 
+
+```
+
+

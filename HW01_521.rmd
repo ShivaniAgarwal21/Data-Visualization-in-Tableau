@@ -1,0 +1,337 @@
+---
+title: "Homework Week 1"
+author: "Shivani Agarwal"
+date: "4/2/2020"
+output:
+  pdf_document: default
+  html_document: default
+class: ISQA 521 – Spring 2020
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lessR)
+library(ggplot2)
+library(waffle)
+library(tidyverse)
+```
+
+## R Markdown
+
+##1. Bar Chart (from data)
+This supermarket data set comes with Tableau, used in many of their demonstration videos: 
+http://web.pdx.edu/~gerbing/data/SupermarketTransactions.xlsx
+
+###a. From lessR Read():
+
+```{r}
+d <- Read("http://web.pdx.edu/~gerbing/data/SupermarketTransactions.xlsx")
+```
+
+i. How many transactions (rows of data) are recorded in the data file?
+Ans: There are 14059 transactions (rows of data) recorded in the data file.
+
+ii. How many customers provided data?
+Ans: There are 14059 customers who provided the data but 5404 are the number of unique customers.
+
+iii. How many purchases were recorded?
+Ans: There are 14059 purchases recorded in total but 742 are the unique purchases.
+
+###b. Provide the bar chart of Gender using: 
+i. base R
+Ans: 
+
+```{r}
+barplot(table(d$Gender))
+```
+
+
+ii. lessR
+Ans: 
+
+```{r}
+BarChart(Gender, data = d)
+```
+
+
+iii. ggplot2
+Ans. 
+
+```{r}
+ggplot(data = d,mapping = aes(x = Gender))+ geom_bar()
+```
+
+
+What do you conclude about the relationship of Gender with shopping at these stores?
+Ans: We can conclude that in general Females are shopping more than mans at these stores. Number of Females shopping is more than 7000 while mans remains less than 7000, this implies that females do shopping at these stores more than mans. However, the difference in percentage is not much, so overall females are 2% more in numbers than mans in shopping at these stores. 
+
+Why is base R not used much for visualizations? 
+Ans:  base R is not much used for visualization because it requires programming to produce presentation quality graphics.  While lessR is much simple and useful in understanding the data. It also provides us extra useful information along with the plot such as Frequencies, total numbers, missing values etc.
+
+
+###c. Provide visualization of purchases according to country using:
+
+i. lessR, default pie chart
+Ans: 
+```{r}
+PieChart(Country)
+```
+
+
+ii. lessR, traditional (no hole) pie chart
+Ans: 
+
+```{r}
+PieChart(Country, hole = 0, quiet = TRUE)
+```
+
+iii. ggplot2 pie chart
+Ans. 
+
+
+```{r}
+ggplot(na.omit(d), aes(x="", y=stat(count), fill=Country)) +
+  geom_bar() + coord_polar(theta = "y") +
+  theme_void() +
+  theme(legend.text=element_text(size=12)) +
+  theme(legend.title=element_text(siz=15))
+```
+
+iv. square pie chart (waffle)  [note, must reduce the scale:  myFreq <- round(myfreq/100)]
+Ans: 
+
+```{r}
+myfreq <- table(d$Country)
+myFreq <- round(myfreq/100)
+waffle(myFreq, flip=TRUE, xlab="Transaction by Country")
+```
+
+
+
+v. lessR bubble plot
+Ans. 
+
+```{r }
+Plot(Country)
+```
+
+Which visualization do you prefer? Why? [no right answer]
+Ans: I would prefer pie chart with hole or no hole over others square pie chart and bubble plot. Main reason is that PieChart is more informative by giving exact percentage of purchases by each country while others just show it visually and no other information is provided which makes them less preferred.
+
+What do you conclude about the relationship of Country with shopping at these stores?
+I conclude that USA is the country with the most purchases from these stores and then Mexico and then Canada. USA constitutes more than half sales for these stores with a exact percentage of 68% while for Mexico is 26% and Canada is only 6%.
+
+###d. First do the aggregation, sum over each Dept. From this aggregation, provide the horizontal version of a chart for purchases of products in each Dept with:
+
+```{r }
+avgd <- d %>% group_by(Dept) %>% summarize(n=n()) %>% na.omit(d)
+avgd
+```
+
+i. lessR bar chart
+Ans:
+
+```{r }
+BarChart(Dept,n, data=avgd, horiz = TRUE)
+```
+
+
+
+
+ii. lessR bar chart, sorted
+Ans: 
+
+```{r}
+BarChart(Dept,n, data=avgd, horiz = TRUE, sort="+")
+```
+
+
+iii. ggplot2 bar chart
+Ans:
+
+```{r }
+ggplot(avgd, aes(Dept, n)) + geom_bar(stat="identity") + coord_flip()
+```
+
+
+iv. lessR Cleveland dot plot, sorted   [Plot(Dept, stat="count", sort="+", smooth=FALSE)]
+Ans: 
+
+```{r}
+Plot(Dept,n, stat="count", sort="+",data= avgd, smooth=FALSE)
+```
+
+
+What are the three top categories of purchased products in terms of number of purchases?
+Ans: Produce, snack food and Household are the top three categories of purchased products in terms of number of purchases.
+
+
+###e. Examine revenue and is sources. Do not bother with a separate aggregation. Here let lessR do that implicitly. First, examine the total (sum) revenue and mean revenue according to country.
+i. lessR total revenue
+Ans: 
+
+```{r}
+BarChart(Country, Revenue, stat="sum")
+```
+
+
+ii. lessR mean revenue
+
+```{r}
+BarChart(Country, Revenue, stat="mean")
+```
+
+Should the company consider expanding in countries with fewer purchases? Why?
+Ans:  I dont think so company should expand in countries with fewer purchases as it already shows that they are less interested in these products and may be buying from some other companies then this company. Even revenue generated is very low, therefore it will be better to not to expand to those countries any further.
+
+
+###f. Examine revenue according to department. To facilitate the comparison, display the mean deviations, sorted. Again, let lessR do the aggregations implicitly.
+
+```{r}
+BarChart(Dept, Revenue, stat="dev", sort="+",horiz = TRUE)
+```
+
+What profits are the most profitable per sale? The least profitable?
+Ans: Most profitable is starchy foods and then second is Eggs while the least profitable remains Checkout and then Baking goods.
+
+
+##2. R Factors
+Consider the following questions from a Qualtrics survey administered to undergraduates at the beginning their Marketing Research course. The name for this matrix of responses is Past, so the names for the four individual items are Past_1, …, Past_4.
+ 
+The data are available at:   http://web.pdx.edu/~gerbing/521/resources/460S14.csv
+
+```{r}
+d <- Read("http://web.pdx.edu/~gerbing/521/resources/460S14.csv")
+d
+```
+
+###a.	What is the sample size for these data, that is, how many students provided responses?
+Ans: The sample size for the data is 19 variables and 31 cases. 31 number of
+students provided the responses. 
+
+
+###b.	What are the variable names for these four items?
+Ans: Past_1, Past_2, Past_3 and Past_4 are the variable names for these four items.
+
+###c.	Do the responses to any of the items indicate much missing data? Why? What about these four items in particular?
+Ans: Using detail() function we observed that there are four missing values:
+
+```{r}
+details(d)
+
+```
+
+Below are the response variables which are having NULL values:
+Variable Past2_1 has 4 missing values.
+Variable Learn2_1 has 1 missing value.
+Variable Learn2_2 has 1 missing value.
+Variable Learn2_4 has 1 missing value.
+
+I think there could be many reasons for these value to be NA, to list few of them :
+the undergraduate students were not interested in that particular variable or they have no exposure about that or it could be that they didnt want to share the information about it.
+
+These four items in particular have no missing values.
+
+
+###d.	How are these four items scaled in terms of the recorded responses?
+Ans: Using str() function we can scale the items in terms of the recorded responses.
+
+```{r }
+str(d$Past_1)
+str(d$Past_2)
+str(d$Past_3)
+str(d$Past_4)
+```
+
+###e.	Convert these four items to factors, with the attached labels.
+Ans: 
+
+```{r}
+LikertCats <- c( "Not at all", "Some", "A fair amount", "Cannot remember")
+LikertCats
+d$Past_1 <- factor(d$Past_1, levels=1:4, labels= LikertCats)
+d$Past_1
+```
+
+```{r}
+d$Past_2 = factor(d$Past_2, levels=1:4, labels= LikertCats)
+d$Past_2
+```
+
+```{r}
+d$Past_3 = factor(d$Past_3, levels=1:4, labels= LikertCats)
+d$Past_3
+```
+
+```{r}
+d$Past_4 = factor(d$Past_4, levels=1:4, labels=LikertCats)
+d$Past_4
+```
+
+
+###f.	Generate a bar chart for the first item, the t-test item, with the identifying labels. Use any bar chart function you wish. Since we do not have proper variable labels here, add the item content to the graph with the standard R xlab parameter, as in xlab="my x-axis label".
+Ans: 
+
+```{r}
+bc(Past_1, data=d, horiz=FALSE, xlab="my x-axis label", ylab="t-test for the difference of two means",main="Past_1")
+```
+
+###g.	One perspective on these response categories is that they can be considered ordered, with the “Cannot remember” category indicating the least amount of knowledge about the topic. That is, the student does not even recognize the topic. Construct a new factor variable (from the original data, just re-read) with this category listed first.
+Ans:
+
+```{r}
+d$Past_1 <- factor(d$Past_1, levels=c("Cannot remember", "Not at all", "Some", "A fair amount"), ordered=TRUE)
+str(d$Past_1)
+```
+
+```{r}
+d$Past_2 <- factor(d$Past_2, levels=c("Cannot remember", "Not at all", "Some", "A fair amount"), ordered=TRUE)
+str(d$Past_2)
+```
+
+```{r}
+d$Past_3 <- factor(d$Past_3, levels=c("Cannot remember", "Not at all", "Some", "A fair amount"), ordered=TRUE)
+str(d$Past_3)
+```
+```{r}
+d$Past_4 <- factor(d$Past_4, levels=c("Cannot remember", "Not at all", "Some", "A fair amount"), ordered=TRUE)
+str(d$Past_4)
+```
+
+
+###h.	Generate a bar chart with these re-ordered response categories.
+Ans: 
+
+```{r}
+bc(Past_1, data=d, horiz=FALSE, xlab="my x-axis label", ylab="t-test for the difference of two means",main="Past_1")
+```
+
+```{r}
+bc(Past_2, data=d, horiz=FALSE, xlab="my x-axis label", ylab="t-test for the difference of two means",main="Past_2")
+```
+
+```{r}
+bc(Past_3, data=d, horiz=FALSE, xlab="my x-axis label", ylab="t-test for the difference of two means",main="Past_3")
+```
+
+```{r}
+bc(Past_4, data=d, horiz=FALSE, xlab="my x-axis label", ylab="t-test for the difference of two means",main="Past_4")
+```
+
+
+###i.	Are there any response categories for any of these four variables that had 0 responses? If so, how would you adjust the definition of your factor function so that subsequent analyses would explicitly indicate 0 responses, such as for a bar chart or a frequency distribution?
+Ans:
+
+```{r}
+str(d)
+```
+
+All the responses have values in the dataset.
+
+###j.	Plot the tabulation of responses for all four variables on the same panel (plot).
+Ans: 
+
+```{r}
+Plot(c(Past_1, Past_2, Past_3, Past_4), data = d)
+```
+
